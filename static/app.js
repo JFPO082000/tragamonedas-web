@@ -1,5 +1,5 @@
 const API_URL = ""; 
-// IMPORTANTE: aquí pega la URL de Render cuando lo subas
+// IMPORTANTE: aquí pega la URL de Render cuando lo subas.
 // Ej: const API_URL = "https://mi-slot.onrender.com";
 
 let balance = 500;
@@ -13,14 +13,27 @@ const spinBtn = document.getElementById("spinBtn");
 const autoBtn = document.getElementById("autoBtn");
 const balanceEl = document.getElementById("balance");
 
-// Crear las 9 celdas
-const cells = [];
-for (let i = 0; i < 9; i++) {
-  const div = document.createElement("div");
-  div.className = "cell";
-  div.textContent = "❔";
-  gridEl.appendChild(div);
-  cells.push(div);
+// Símbolos disponibles en el frontend
+const SYMBOLS = ["❔", "🍒", "🍋", "🍇", "⭐", "7️⃣", "🔔"];
+
+// Crear las 3 columnas (rodillos)
+const reels = [];
+for (let i = 0; i < 3; i++) {
+  const reelContainer = document.createElement("div");
+  reelContainer.className = "reel";
+  
+  // Cada rodillo tendrá 3 celdas visibles
+  for (let j = 0; j < 3; j++) {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    const symbolDiv = document.createElement("div");
+    symbolDiv.className = "symbol";
+    symbolDiv.textContent = "❔";
+    cell.appendChild(symbolDiv);
+    reelContainer.appendChild(cell);
+  }
+  gridEl.appendChild(reelContainer);
+  reels.push(reelContainer);
 }
 
 function updateBalance() {
@@ -31,12 +44,6 @@ function setStatus(text) {
   statusEl.textContent = text;
 }
 
-function showGrid(grid) {
-  const flat = grid.flat();
-  flat.forEach((symbol, i) => {
-    cells[i].textContent = symbol;
-  });
-}
 
 async function spinOnce() {
   if (spinning) return;
@@ -53,11 +60,37 @@ async function spinOnce() {
   balance -= bet;
   updateBalance();
 
-  // Animación falsa mientras carga
-  cells.forEach(c => {
-    c.textContent = ["🍒","🍋","🍇","⭐","7️⃣"][Math.floor(Math.random()*5)];
+  // Iniciar animación de giro
+  const spinPromises = reels.map((reel, reelIndex) => {
+    return new Promise(resolve => {
+      const symbols = reel.querySelectorAll('.symbol');
+      const animationInterval = setInterval(() => {
+        symbols.forEach(s => {
+          s.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+        });
+      }, 100);
+
+      // Detener después de un tiempo
+      setTimeout(() => {
+        clearInterval(animationInterval);
+        resolve();
+      }, 1000 + reelIndex * 500); // Retraso escalonado
+    });
   });
 
+  // Esperar a que la animación "termine" visualmente antes de mostrar el resultado
+  await Promise.all(spinPromises);
+
+  // Mostrar resultado final
+  const showResult = (grid) => {
+    reels.forEach((reel, reelIndex) => {
+      const symbols = reel.querySelectorAll('.symbol');
+      symbols.forEach((s, symbolIndex) => {
+        s.textContent = grid[symbolIndex][reelIndex];
+      });
+    });
+  };
+  
   const res = await fetch(`${API_URL}/spin`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
@@ -65,7 +98,7 @@ async function spinOnce() {
   });
 
   const data = await res.json();
-  showGrid(data.grid);
+  showResult(data.grid);
 
   if (data.win > 0) {
     balance += data.win;
@@ -95,4 +128,3 @@ autoBtn.onclick = () => {
 };
 
 updateBalance();
-

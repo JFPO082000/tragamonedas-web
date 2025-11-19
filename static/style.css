@@ -47,6 +47,21 @@ h1 {
   align-items: center;
   height: 70px;
   border-radius: 10px;
+  overflow: hidden; /* Oculta el desbordamiento del rodillo */
+}
+
+.reel {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.5s ease-out; /* Transición para cuando se detiene */
+}
+
+.reel.spinning {
+  transition: none; /* Sin transición mientras gira */
+}
+
+.symbol {
+  font-size: 2.3rem;
 }
 
 .row {
