@@ -59,6 +59,69 @@ function pullLever() {
 // Event listener para la palanca
 leverContainer.addEventListener("click", pullLever);
 
+// === FUNCIONES DE EFECTOS VISUALES ===
+
+// Crear confeti
+function createConfetti(count) {
+  const colors = ['#FFD700', '#FF6347', '#00FF00', '#1E90FF', '#FF69B4', '#FFA500'];
+
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + 'vw';
+      confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+      confetti.style.animationDelay = (Math.random() * 0.5) + 's';
+      document.body.appendChild(confetti);
+
+      setTimeout(() => confetti.remove(), 4000);
+    }, i * 30);
+  }
+}
+
+// Crear flash dorado
+function createFlash() {
+  const flash = document.createElement('div');
+  flash.className = 'golden-flash';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 600);
+}
+
+// Crear overlay de celebración
+function createCelebrationOverlay() {
+  const overlay = document.createElement('div');
+  overlay.className = 'celebration-overlay';
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 800);
+}
+
+// Crear texto de gran victoria
+function createBigWinText(text) {
+  const bigWin = document.createElement('div');
+  bigWin.className = 'big-win-text';
+  bigWin.textContent = text;
+  document.body.appendChild(bigWin);
+  setTimeout(() => bigWin.remove(), 2000);
+}
+
+// Crear overlay de pérdida
+function createLossOverlay() {
+  const overlay = document.createElement('div');
+  overlay.className = 'loss-overlay';
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 800);
+}
+
+// Crear texto de pérdida
+function createLossText() {
+  const lossText = document.createElement('div');
+  lossText.className = 'loss-text';
+  lossText.textContent = '😞';
+  document.body.appendChild(lossText);
+  setTimeout(() => lossText.remove(), 1500);
+}
+
 async function spinOnce() {
   if (spinning) return;
 
@@ -82,7 +145,7 @@ async function spinOnce() {
     return new Promise(resolve => {
       const symbols = reel.querySelectorAll('.symbol');
       let spinCount = 0;
-      const maxSpins = 20 + (reelIndex * 10); // Más giros para rodillos más a la derecha
+      const maxSpins = 20 + (reelIndex * 10);
 
       const animationInterval = setInterval(() => {
         symbols.forEach(s => {
@@ -90,7 +153,6 @@ async function spinOnce() {
         });
         spinCount++;
 
-        // Detener gradualmente
         if (spinCount >= maxSpins) {
           clearInterval(animationInterval);
           reel.classList.remove("spinning");
@@ -100,7 +162,6 @@ async function spinOnce() {
     });
   });
 
-  // Esperar a que la animación "termine" visualmente antes de mostrar el resultado
   await Promise.all(spinPromises);
 
   // Obtener resultado del backend
@@ -121,34 +182,76 @@ async function spinOnce() {
       });
     });
 
-    // Efecto de victoria
+    // Efecto de victoria o pérdida
     if (data.win > 0) {
       balance += data.win;
-      setStatus(`🎉 ¡GANASTE $${data.win}!`);
+      const winAmount = data.win;
+      const isBigWin = winAmount >= bet * 5;
 
-      // Efecto visual de victoria
-      gridEl.parentElement.classList.add("win-effect");
-      setTimeout(() => {
-        gridEl.parentElement.classList.remove("win-effect");
-      }, 500);
+      if (isBigWin) {
+        // GRAN VICTORIA
+        setStatus(`🎊 ¡GRAN VICTORIA! +$${winAmount} 🎊`);
 
-      // Parpadeo de símbolos ganadores
+        document.querySelector('.slot-machine').classList.add('machine-shake-win');
+        setTimeout(() => {
+          document.querySelector('.slot-machine').classList.remove('machine-shake-win');
+        }, 500);
+
+        createFlash();
+        createCelebrationOverlay();
+        createBigWinText(`¡$${winAmount}!`);
+        createConfetti(50);
+
+        document.querySelector('.lights').classList.add('victory-lights');
+        setTimeout(() => {
+          document.querySelector('.lights').classList.remove('victory-lights');
+        }, 3000);
+
+      } else {
+        // Victoria normal
+        setStatus(`🎉 ¡GANASTE $${winAmount}!`);
+
+        gridEl.parentElement.classList.add("win-effect");
+        setTimeout(() => {
+          gridEl.parentElement.classList.remove("win-effect");
+        }, 500);
+
+        createConfetti(20);
+        createFlash();
+      }
+
       highlightWinningLines(data.grid);
+
     } else {
-      setStatus("Sigue intentando...");
+      // PÉRDIDA
+      setStatus("Intenta de nuevo...");
+
+      createLossOverlay();
+
+      document.querySelector('.slot-machine').classList.add('machine-shake-loss');
+      setTimeout(() => {
+        document.querySelector('.slot-machine').classList.remove('machine-shake-loss');
+      }, 400);
+
+      const symbols = document.querySelectorAll('.symbol');
+      symbols.forEach(s => s.classList.add('symbol-dimmed'));
+      setTimeout(() => {
+        symbols.forEach(s => s.classList.remove('symbol-dimmed'));
+      }, 800);
+
+      createLossText();
     }
 
     updateBalance();
   } catch (error) {
     console.error("Error al conectar con el servidor:", error);
     setStatus("⚠️ Error de conexión");
-    balance += bet; // Devolver la apuesta
+    balance += bet;
     updateBalance();
   }
 
   spinning = false;
 
-  // Continuar auto-spin si está activado
   if (autoSpin && balance >= bet) {
     setTimeout(() => {
       pullLever();
@@ -162,7 +265,6 @@ async function spinOnce() {
 
 // Resaltar líneas ganadoras
 function highlightWinningLines(grid) {
-  // Simple efecto de parpadeo en todos los símbolos
   const cells = document.querySelectorAll('.cell');
   let blinkCount = 0;
   const blinkInterval = setInterval(() => {
