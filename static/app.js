@@ -1,6 +1,5 @@
-const API_URL = ""; 
-// IMPORTANTE: aquí pega la URL de Render cuando lo subas.
-// Ej: const API_URL = "https://mi-slot.onrender.com";
+// Usar el origen actual del navegador (funciona local y en producción)
+const API_URL = window.location.origin;
 
 let balance = 500;
 let autoSpin = false;
