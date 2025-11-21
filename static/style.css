@@ -1,121 +1,483 @@
 :root {
-  --bg: #202020;
-  --gold: #ab925c;
-  --panel: #2b2b2b;
+  --bg: #1a0a0a;
+  --gold: #FFD700;
+  --gold-dark: #CC9900;
+  --red: #DC143C;
+  --machine-body: linear-gradient(145deg, #8B0000, #B22222);
+  --machine-metal: linear-gradient(145deg, #2a2a2a, #1a1a1a);
   --text: #ffffff;
+  --shadow: rgba(0, 0, 0, 0.8);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--bg);
+  background: radial-gradient(circle at center, #2d1810 0%, var(--bg) 100%);
   color: var(--text);
-  font-family: system-ui;
-  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
 }
 
 .app {
-  max-width: 420px;
-  margin: auto;
-  padding: 16px;
+  width: 100%;
+  max-width: 550px;
+  padding: 20px;
+  perspective: 1000px;
 }
 
-.card {
-  background: var(--panel);
-  padding: 16px;
-  border-radius: 16px;
+/* ========== MÁQUINA PRINCIPAL ========== */
+.slot-machine {
+  position: relative;
+  background: var(--machine-body);
+  border-radius: 24px;
+  box-shadow:
+    0 30px 80px var(--shadow),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    0 0 0 8px #4a0000,
+    0 0 0 12px var(--gold);
+  padding: 20px;
+  transform: translateZ(0);
+  animation: machineGlow 3s ease-in-out infinite;
 }
 
-h1 {
+@keyframes machineGlow {
+
+  0%,
+  100% {
+    box-shadow:
+      0 30px 80px var(--shadow),
+      inset 0 2px 4px rgba(255, 255, 255, 0.1),
+      0 0 0 8px #4a0000,
+      0 0 0 12px var(--gold),
+      0 0 40px rgba(255, 215, 0, 0.3);
+  }
+
+  50% {
+    box-shadow:
+      0 30px 80px var(--shadow),
+      inset 0 2px 4px rgba(255, 255, 255, 0.1),
+      0 0 0 8px #4a0000,
+      0 0 0 12px var(--gold),
+      0 0 60px rgba(255, 215, 0, 0.6);
+  }
+}
+
+/* ========== TOP DECORATIVO ========== */
+.machine-top {
+  background: var(--machine-metal);
+  border-radius: 16px 16px 0 0;
+  padding: 15px;
+  margin: -20px -20px 15px -20px;
+  border: 3px solid var(--gold);
+  border-bottom: none;
+  position: relative;
+}
+
+.lights {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+
+.light {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow:
+    0 0 10px var(--gold),
+    inset 0 2px 4px rgba(255, 255, 255, 0.5);
+  animation: blink 1.5s infinite;
+}
+
+.light:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.light:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.light:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.light:nth-child(4) {
+  animation-delay: 0.9s;
+}
+
+.light:nth-child(5) {
+  animation-delay: 1.2s;
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+}
+
+.title {
   text-align: center;
+  font-family: 'Righteous', cursive;
+  font-size: 2rem;
   color: var(--gold);
+  text-shadow:
+    0 0 10px var(--gold),
+    0 0 20px var(--gold),
+    2px 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 3px;
+  margin: 0;
+}
+
+/* ========== CUERPO DE LA MÁQUINA ========== */
+.machine-body {
+  background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.info-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.balance {
+  font-family: 'Righteous', cursive;
+  font-size: 1.8rem;
+  color: var(--gold);
+  text-shadow: 0 0 10px var(--gold);
+  font-weight: bold;
+}
+
+.status {
+  font-size: 1rem;
+  color: #fff;
+  text-align: right;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+}
+
+/* ========== RODILLOS ========== */
+.reels-container {
+  background: linear-gradient(145deg, #0a0a0a, #1a1a1a);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow:
+    inset 0 4px 12px rgba(0, 0, 0, 0.8),
+    0 0 0 4px var(--gold);
+}
+
+.reels-frame {
+  background: #000;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.9);
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  background: #181818;
-  border-radius: 12px;
-  padding: 10px;
-  margin-bottom: 12px;
-}
-
-.cell {
-  background: #303030;
-  font-size: 2.3rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 70px;
-  border-radius: 10px;
-  overflow: hidden; /* Oculta el desbordamiento del rodillo */
+  gap: 10px;
 }
 
 .reel {
   display: flex;
   flex-direction: column;
-  transition: transform 0.5s ease-out; /* Transición para cuando se detiene */
+  gap: 8px;
 }
 
-.reel.spinning {
-  transition: none; /* Sin transición mientras gira */
+.cell {
+  background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+  border: 3px solid var(--gold-dark);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 85px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset 0 2px 4px rgba(255, 215, 0, 0.2),
+    0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.cell::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%,
+      rgba(0, 0, 0, 0.3) 100%);
+  pointer-events: none;
 }
 
 .symbol {
-  font-size: 2.3rem;
+  font-size: 3rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  transition: transform 0.1s ease;
 }
 
-.status {
-  text-align: center;
-  font-weight: bold;
-  font-size: 1.2rem;
-  color: var(--gold);
-  padding: 10px;
-  margin-bottom: 12px;
-  min-height: 30px;
+/* Animación de giro */
+.reel.spinning .symbol {
+  animation: spinBlur 0.1s linear infinite;
 }
 
-.row {
+@keyframes spinBlur {
+
+  0%,
+  100% {
+    filter: blur(0px) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    transform: translateY(0);
+  }
+
+  50% {
+    filter: blur(3px) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    transform: translateY(-2px);
+  }
+}
+
+/* ========== CONTROLES ========== */
+.controls {
   display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-end;
 }
 
-input {
+.bet-control {
   flex: 1;
-  padding: 8px;
-  background: #111;
-  color: var(--text);
-  border: 1px solid #444;
-  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-button {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 999px;
+.bet-control label {
+  font-size: 0.9rem;
+  color: var(--gold);
+  letter-spacing: 2px;
   font-weight: bold;
 }
 
-.btn-main {
-  background: var(--gold);
-  color: #000;
+.bet-control input {
+  padding: 12px;
+  background: #000;
+  color: var(--gold);
+  border: 3px solid var(--gold-dark);
+  border-radius: 8px;
+  font-size: 1.3rem;
+  font-family: 'Righteous', cursive;
+  text-align: center;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.bet-control input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
 
 .btn-auto {
-  background: #404040;
-  color: var(--text);
-}
-
-.balance {
-  text-align: center;
+  flex: 1;
+  padding: 12px 20px;
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
   color: var(--gold);
-  margin-top: 6px;
+  border: 3px solid var(--gold-dark);
+  border-radius: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
-.footer {
-  text-align: center;
+.btn-auto:hover {
+  background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-auto:active {
+  transform: translateY(0);
+}
+
+.auto-status {
   font-size: 0.8rem;
-  margin-top: 10px;
   opacity: 0.8;
+}
+
+/* ========== PALANCA ========== */
+.lever-container {
+  position: absolute;
+  right: -50px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 80px;
+  height: 200px;
+  cursor: pointer;
+  z-index: 10;
+  user-select: none;
+}
+
+.lever-arm {
+  position: absolute;
+  right: 30px;
+  top: 0;
+  width: 16px;
+  height: 140px;
+  background: linear-gradient(90deg, #888, #aaa, #888);
+  border-radius: 8px;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.5),
+    inset 2px 0 4px rgba(255, 255, 255, 0.3);
+  transform-origin: top center;
+  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.lever-arm::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 16px;
+  background: radial-gradient(circle, #666, #333);
+  border-radius: 8px 8px 2px 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.lever-handle {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 50px;
+  background: radial-gradient(ellipse at center, var(--red) 0%, #8B0000 100%);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.6),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    0 0 20px rgba(220, 20, 60, 0.4);
+  border: 2px solid #660000;
+}
+
+.lever-handle::after {
+  content: '⬇';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Animación de jalar la palanca */
+.lever-arm.pulled {
+  transform: rotate(25deg);
+}
+
+.lever-container:hover .lever-handle {
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.6),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    0 0 30px rgba(220, 20, 60, 0.8);
+}
+
+/* ========== FOOTER ========== */
+.machine-footer {
+  background: var(--machine-metal);
+  border-radius: 0 0 16px 16px;
+  padding: 12px;
+  margin: 15px -20px -20px -20px;
+  border: 3px solid var(--gold);
+  border-top: none;
+  text-align: center;
+}
+
+.paytable-label {
+  font-size: 0.9rem;
+  color: var(--gold);
+  letter-spacing: 3px;
+  font-weight: bold;
+}
+
+/* ========== EFECTOS DE VICTORIA ========== */
+.win-effect {
+  animation: winPulse 0.5s ease-in-out;
+}
+
+@keyframes winPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 600px) {
+  .app {
+    padding: 10px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .balance {
+    font-size: 1.4rem;
+  }
+
+  .cell {
+    height: 70px;
+  }
+
+  .symbol {
+    font-size: 2.5rem;
+  }
+
+  .lever-container {
+    right: -40px;
+    transform: scale(0.9) translateY(-50%);
+  }
 }

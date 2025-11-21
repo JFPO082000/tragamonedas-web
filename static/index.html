@@ -2,34 +2,74 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Royal Slots Web</title>
+  <title>🎰 Royal Jackpot Slots</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Righteous&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
   <div class="app">
-    <div class="card" id="card">
-      <h1>🎰 Royal Slots Web</h1>
-
-      <div class="grid" id="grid"></div> <!-- El JS creará 3 columnas aquí -->
-
-      <div class="status" id="status"></div>
-
-      <div class="row">
-        <label>Apuesta:</label>
-        <input type="number" id="bet" value="10" min="1">
+    <!-- Máquina de Slots -->
+    <div class="slot-machine">
+      
+      <!-- Decoración superior -->
+      <div class="machine-top">
+        <div class="lights">
+          <div class="light"></div>
+          <div class="light"></div>
+          <div class="light"></div>
+          <div class="light"></div>
+          <div class="light"></div>
+        </div>
+        <h1 class="title">💎 ROYAL JACKPOT 💎</h1>
       </div>
 
-      <div class="row">
-        <button class="btn-main" id="spinBtn">SPIN 🎡</button>
-        <button class="btn-auto" id="autoBtn">Auto-Spin OFF</button>
+      <!-- Panel principal -->
+      <div class="machine-body">
+        
+        <!-- Saldo y estado -->
+        <div class="info-panel">
+          <div class="balance" id="balance">$500</div>
+          <div class="status" id="status">¡Buena suerte!</div>
+        </div>
+
+        <!-- Rodillos -->
+        <div class="reels-container">
+          <div class="reels-frame">
+            <div class="grid" id="grid"></div>
+          </div>
+        </div>
+
+        <!-- Controles -->
+        <div class="controls">
+          <div class="bet-control">
+            <label>APUESTA</label>
+            <input type="number" id="bet" value="10" min="1" max="100">
+          </div>
+          
+          <button class="btn-auto" id="autoBtn">
+            <span>AUTO</span>
+            <span class="auto-status">OFF</span>
+          </button>
+        </div>
+
       </div>
 
-      <div class="balance" id="balance">Saldo: 500</div>
+      <!-- Palanca lateral -->
+      <div class="lever-container" id="leverContainer">
+        <div class="lever-arm" id="leverArm">
+          <div class="lever-handle"></div>
+        </div>
+      </div>
 
-      <p class="footer">5 líneas de pago • Backend en Python</p>
+      <!-- Footer -->
+      <div class="machine-footer">
+        <div class="paytable-label">5 LÍNEAS DE PAGO</div>
+      </div>
+      
     </div>
   </div>
 
