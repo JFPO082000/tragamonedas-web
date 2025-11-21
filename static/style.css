@@ -1,5 +1,5 @@
 :root {
-  --bg: #1a0a0a;
+  --bg: #1a1a1a;
   --gold: #ab925c;
   --gold-dark: #8b7a4c;
   --red: #DC143C;
@@ -16,11 +16,12 @@
 }
 
 body {
-  background-color: #1a1a1a;
-  background-image: url('/static/pattern-bg.jpg');
+  background-color: #202020;
+  background-image: linear-gradient(rgba(26, 26, 26, 0.7), rgba(26, 26, 26, 0.7)), url('/static/pattern-bg.jpg');
   background-repeat: repeat;
-  background-size: 350px 350px;
-  background-position: 0 0;
+  background-size: 500px 500px;
+  background-position: center center;
+  background-attachment: fixed;
   color: var(--text);
   font-family: 'Bebas Neue', sans-serif;
   min-height: 100vh;
