@@ -63,7 +63,7 @@ leverContainer.addEventListener("click", pullLever);
 
 // Crear confeti
 function createConfetti(count) {
-  const colors = ['#FFD700', '#FF6347', '#00FF00', '#1E90FF', '#FF69B4', '#FFA500'];
+  const colors = ['#ab925c', '#FF6347', '#00FF00', '#1E90FF', '#FF69B4', '#FFA500'];
 
   for (let i = 0; i < count; i++) {
     setTimeout(() => {
@@ -137,6 +137,24 @@ async function spinOnce() {
   balance -= bet;
   updateBalance();
 
+  // OBTENER RESULTADO INMEDIATAMENTE (no esperar la animación)
+  let serverData = null;
+  const fetchPromise = fetch(`${API_URL}/spin`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bet })
+  })
+    .then(res => res.json())
+    .then(data => {
+      serverData = data;
+    })
+    .catch(error => {
+      console.error("Error al conectar con el servidor:", error);
+      setStatus("⚠️ Error de conexión");
+      balance += bet;
+      updateBalance();
+    });
+
   // Agregar clase spinning para activar animación de blur
   reels.forEach(reel => reel.classList.add("spinning"));
 
@@ -162,94 +180,84 @@ async function spinOnce() {
     });
   });
 
-  await Promise.all(spinPromises);
+  // Esperar a que TANTO la animación COMO el fetch terminen
+  await Promise.all([...spinPromises, fetchPromise]);
 
-  // Obtener resultado del backend
-  try {
-    const res = await fetch(`${API_URL}/spin`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bet })
-    });
-
-    const data = await res.json();
-
-    // Mostrar resultado final
-    reels.forEach((reel, reelIndex) => {
-      const symbols = reel.querySelectorAll('.symbol');
-      symbols.forEach((s, symbolIndex) => {
-        s.textContent = data.grid[symbolIndex][reelIndex];
-      });
-    });
-
-    // Efecto de victoria o pérdida
-    if (data.win > 0) {
-      balance += data.win;
-      const winAmount = data.win;
-      const isBigWin = winAmount >= bet * 5;
-
-      if (isBigWin) {
-        // GRAN VICTORIA
-        setStatus(`🎊 ¡GRAN VICTORIA! +$${winAmount} 🎊`);
-
-        document.querySelector('.slot-machine').classList.add('machine-shake-win');
-        setTimeout(() => {
-          document.querySelector('.slot-machine').classList.remove('machine-shake-win');
-        }, 500);
-
-        createFlash();
-        createCelebrationOverlay();
-        createBigWinText(`¡$${winAmount}!`);
-        createConfetti(50);
-
-        document.querySelector('.lights').classList.add('victory-lights');
-        setTimeout(() => {
-          document.querySelector('.lights').classList.remove('victory-lights');
-        }, 3000);
-
-      } else {
-        // Victoria normal
-        setStatus(`🎉 ¡GANASTE $${winAmount}!`);
-
-        gridEl.parentElement.classList.add("win-effect");
-        setTimeout(() => {
-          gridEl.parentElement.classList.remove("win-effect");
-        }, 500);
-
-        createConfetti(20);
-        createFlash();
-      }
-
-      highlightWinningLines(data.grid);
-
-    } else {
-      // PÉRDIDA
-      setStatus("Intenta de nuevo...");
-
-      createLossOverlay();
-
-      document.querySelector('.slot-machine').classList.add('machine-shake-loss');
-      setTimeout(() => {
-        document.querySelector('.slot-machine').classList.remove('machine-shake-loss');
-      }, 400);
-
-      const symbols = document.querySelectorAll('.symbol');
-      symbols.forEach(s => s.classList.add('symbol-dimmed'));
-      setTimeout(() => {
-        symbols.forEach(s => s.classList.remove('symbol-dimmed'));
-      }, 800);
-
-      createLossText();
-    }
-
-    updateBalance();
-  } catch (error) {
-    console.error("Error al conectar con el servidor:", error);
-    setStatus("⚠️ Error de conexión");
-    balance += bet;
-    updateBalance();
+  // Si no hay datos del servidor (error), terminar
+  if (!serverData) {
+    spinning = false;
+    return;
   }
 
+  // Mostrar resultado final (ahora los símbolos no cambiarán)
+  reels.forEach((reel, reelIndex) => {
+    const symbols = reel.querySelectorAll('.symbol');
+    symbols.forEach((s, symbolIndex) => {
+      s.textContent = serverData.grid[symbolIndex][reelIndex];
+    });
+  });
+
+  // Efecto de victoria o pérdida
+  if (serverData.win > 0) {
+    balance += serverData.win;
+    const winAmount = serverData.win;
+    const isBigWin = winAmount >= bet * 5;
+
+    if (isBigWin) {
+      // GRAN VICTORIA
+      setStatus(`🎊 ¡GRAN VICTORIA! +$${winAmount} 🎊`);
+
+      document.querySelector('.slot-machine').classList.add('machine-shake-win');
+      setTimeout(() => {
+        document.querySelector('.slot-machine').classList.remove('machine-shake-win');
+      }, 500);
+
+      createFlash();
+      createCelebrationOverlay();
+      createBigWinText(`¡$${winAmount}!`);
+      createConfetti(50);
+
+      document.querySelector('.lights').classList.add('victory-lights');
+      setTimeout(() => {
+        document.querySelector('.lights').classList.remove('victory-lights');
+      }, 3000);
+
+    } else {
+      // Victoria normal
+      setStatus(`🎉 ¡GANASTE $${winAmount}!`);
+
+      gridEl.parentElement.classList.add("win-effect");
+      setTimeout(() => {
+        gridEl.parentElement.classList.remove("win-effect");
+      }, 500);
+
+      createConfetti(20);
+      createFlash();
+    }
+
+    highlightWinningLines(serverData.grid);
+
+  } else {
+    // PÉRDIDA
+    setStatus("Intenta de nuevo...");
+
+    createLossOverlay();
+
+    document.querySelector('.slot-machine').classList.add('machine-shake-loss');
+    setTimeout(() => {
+      document.querySelector('.slot-machine').classList.remove('machine-shake-loss');
+    }, 400);
+
+    const symbols = document.querySelectorAll('.symbol');
+    symbols.forEach(s => s.classList.add('symbol-dimmed'));
+    setTimeout(() => {
+      symbols.forEach(s => s.classList.remove('symbol-dimmed'));
+    }, 800);
+
+    createLossText();
+  }
+
+  updateBalance();
   spinning = false;
 
   if (autoSpin && balance >= bet) {
@@ -270,11 +278,11 @@ function highlightWinningLines(grid) {
   const blinkInterval = setInterval(() => {
     cells.forEach((cell, i) => {
       if (blinkCount % 2 === 0) {
-        cell.style.borderColor = '#FFD700';
-        cell.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 20px rgba(255, 215, 0, 0.3)';
+        cell.style.borderColor = '#ab925c';
+        cell.style.boxShadow = '0 0 20px rgba(171, 146, 92, 0.8), inset 0 0 20px rgba(171, 146, 92, 0.3)';
       } else {
-        cell.style.borderColor = '#CC9900';
-        cell.style.boxShadow = 'inset 0 2px 4px rgba(255, 215, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.5)';
+        cell.style.borderColor = '#8b7a4c';
+        cell.style.boxShadow = 'inset 0 2px 4px rgba(171, 146, 92, 0.2), 0 4px 8px rgba(0, 0, 0, 0.5)';
       }
     });
     blinkCount++;
