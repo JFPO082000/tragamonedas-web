@@ -16,8 +16,11 @@
 }
 
 body {
-  background: #1a1a1a url('/static/pattern-bg.jpg') repeat;
-  background-size: 300px 300px;
+  background-color: #1a1a1a;
+  background-image: url('/static/pattern-bg.jpg');
+  background-repeat: repeat;
+  background-size: 350px 350px;
+  background-position: 0 0;
   color: var(--text);
   font-family: 'Bebas Neue', sans-serif;
   min-height: 100vh;
@@ -475,7 +478,6 @@ body {
   }
 }
 
-/* Sacudida de máquina para victoria */
 .machine-shake-win {
   animation: shakeWin 0.5s ease-in-out;
 }
@@ -524,7 +526,6 @@ body {
   }
 }
 
-/* Overlay de celebración */
 .celebration-overlay {
   position: fixed;
   top: 0;
@@ -554,7 +555,6 @@ body {
   }
 }
 
-/* Flash dorado */
 .golden-flash {
   position: fixed;
   top: 0;
@@ -584,7 +584,6 @@ body {
   }
 }
 
-/* Texto de victoria grande */
 .big-win-text {
   position: fixed;
   top: 50%;
@@ -632,7 +631,6 @@ body {
   }
 }
 
-/* Confeti */
 .confetti {
   position: fixed;
   width: 10px;
