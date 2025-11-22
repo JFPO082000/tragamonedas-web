@@ -33,7 +33,7 @@ body {
 
 .app {
   width: 100%;
-  max-width: 420px;
+  max-width: 336px;
   padding: 15px;
   perspective: 1000px;
 }
