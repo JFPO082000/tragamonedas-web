@@ -1,4 +1,4 @@
-// Usar el origen actual del navegador (funciona local y en producción)1
+// Usar el origen actual del navegador (funciona local y en producción)
 const API_URL = window.location.origin;
 
 let balance = 500;
