@@ -48,6 +48,11 @@ function setStatus(text) {
 function pullLever() {
   if (spinning) return;
 
+  // Sonido de palanca
+  if (typeof soundManager !== 'undefined') {
+    soundManager.playLeverSound();
+  }
+
   leverArm.classList.add("pulled");
 
   setTimeout(() => {
@@ -137,6 +142,11 @@ async function spinOnce() {
   balance -= bet;
   updateBalance();
 
+  // Sonido de giro
+  if (typeof soundManager !== 'undefined') {
+    soundManager.playSpinSound();
+  }
+
   // OBTENER RESULTADO INMEDIATAMENTE (no esperar la animación)
   let serverData = null;
   const fetchPromise = fetch(`${API_URL}/spin`, {
@@ -174,6 +184,12 @@ async function spinOnce() {
         if (spinCount >= maxSpins) {
           clearInterval(animationInterval);
           reel.classList.remove("spinning");
+
+          // Sonido de detención del rodillo
+          if (typeof soundManager !== 'undefined') {
+            soundManager.playReelStopSound();
+          }
+
           resolve();
         }
       }, 80);
@@ -207,6 +223,12 @@ async function spinOnce() {
       // GRAN VICTORIA
       setStatus(`🎊 ¡GRAN VICTORIA! +$${winAmount} 🎊`);
 
+      // Sonido de gran victoria
+      if (typeof soundManager !== 'undefined') {
+        soundManager.playBigWinSound();
+        setTimeout(() => soundManager.playCoinSound(), 400);
+      }
+
       document.querySelector('.slot-machine').classList.add('machine-shake-win');
       setTimeout(() => {
         document.querySelector('.slot-machine').classList.remove('machine-shake-win');
@@ -226,6 +248,12 @@ async function spinOnce() {
       // Victoria normal
       setStatus(`🎉 ¡GANASTE $${winAmount}!`);
 
+      // Sonido de victoria normal
+      if (typeof soundManager !== 'undefined') {
+        soundManager.playWinSound();
+        setTimeout(() => soundManager.playCoinSound(), 200);
+      }
+
       gridEl.parentElement.classList.add("win-effect");
       setTimeout(() => {
         gridEl.parentElement.classList.remove("win-effect");
@@ -240,6 +268,11 @@ async function spinOnce() {
   } else {
     // PÉRDIDA
     setStatus("Intenta de nuevo...");
+
+    // Sonido de pérdida
+    if (typeof soundManager !== 'undefined') {
+      soundManager.playLossSound();
+    }
 
     createLossOverlay();
 

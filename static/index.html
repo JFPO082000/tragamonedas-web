@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <title>🎰 Royal Jackpot Slots</title>
@@ -9,12 +10,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Righteous&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
 
   <div class="app">
     <!-- Máquina de Slots -->
     <div class="slot-machine">
-      
+
       <!-- Decoración superior -->
       <div class="machine-top">
         <div class="lights">
@@ -29,7 +31,7 @@
 
       <!-- Panel principal -->
       <div class="machine-body">
-        
+
         <!-- Saldo y estado -->
         <div class="info-panel">
           <div class="balance" id="balance">$500</div>
@@ -49,7 +51,7 @@
             <label>APUESTA</label>
             <input type="number" id="bet" value="10" min="1" max="100">
           </div>
-          
+
           <button class="btn-auto" id="autoBtn">
             <span>AUTO</span>
             <span class="auto-status">OFF</span>
@@ -69,10 +71,12 @@
       <div class="machine-footer">
         <div class="paytable-label">5 LÍNEAS DE PAGO</div>
       </div>
-      
+
     </div>
   </div>
 
+  <script src="/static/sounds.js"></script>
   <script src="/static/app.js"></script>
 </body>
+
 </html>
