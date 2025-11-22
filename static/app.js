@@ -155,12 +155,12 @@ async function spinOnce() {
 
   // Iniciar animación de giro - CADA RODILLO OBTIENE SU RESULTADO INDEPENDIENTEMENTE
   const spinPromises = reels.map((reel, reelIndex) => {
-    return new Promise(async (resolve) => {
+    return new Promise((resolve) => {
       const symbols = reel.querySelectorAll('.symbol');
       let spinCount = 0;
       const maxSpins = 20 + (reelIndex * 10);
 
-      const animationInterval = setInterval(async () => {
+      const animationInterval = setInterval(() => {
         symbols.forEach(s => {
           s.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
         });
@@ -170,45 +170,45 @@ async function spinOnce() {
           clearInterval(animationInterval);
 
           // Obtener resultado para ESTE rodillo específico del servidor
-          try {
-            const response = await fetch(`${API_URL}/reel`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ reel_index: reelIndex })
+          fetch(`${API_URL}/reel`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reel_index: reelIndex })
+          })
+            .then(res => res.json())
+            .then(data => {
+              // Guardar resultado en el grid
+              finalGrid[reelIndex] = data.symbols;
+
+              // Mostrar el resultado final de ESTE rodillo
+              symbols.forEach((s, symbolIndex) => {
+                s.textContent = data.symbols[symbolIndex];
+              });
+
+              reel.classList.remove("spinning");
+
+              // Sonido de detención del rodillo
+              if (typeof soundManager !== 'undefined') {
+                soundManager.playReelStopSound();
+              }
+
+              resolve();
+            })
+            .catch(error => {
+              console.error("Error al obtener rodillo:", error);
+              // En caso de error, usar símbolos aleatorios
+              const fallbackSymbols = [
+                SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
+                SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
+                SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]
+              ];
+              finalGrid[reelIndex] = fallbackSymbols;
+              symbols.forEach((s, symbolIndex) => {
+                s.textContent = fallbackSymbols[symbolIndex];
+              });
+              reel.classList.remove("spinning");
+              resolve();
             });
-            const data = await response.json();
-
-            // Guardar resultado en el grid
-            finalGrid[reelIndex] = data.symbols;
-
-            // Mostrar el resultado final de ESTE rodillo
-            symbols.forEach((s, symbolIndex) => {
-              s.textContent = data.symbols[symbolIndex];
-            });
-
-            reel.classList.remove("spinning");
-
-            // Sonido de detención del rodillo
-            if (typeof soundManager !== 'undefined') {
-              soundManager.playReelStopSound();
-            }
-
-            resolve();
-          } catch (error) {
-            console.error("Error al obtener rodillo:", error);
-            // En caso de error, usar símbolos aleatorios
-            const fallbackSymbols = [
-              SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
-              SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
-              SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]
-            ];
-            finalGrid[reelIndex] = fallbackSymbols;
-            symbols.forEach((s, symbolIndex) => {
-              s.textContent = fallbackSymbols[symbolIndex];
-            });
-            reel.classList.remove("spinning");
-            resolve();
-          }
         }
       }, 80);
     });
