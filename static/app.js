@@ -147,35 +147,20 @@ async function spinOnce() {
     soundManager.playSpinSound();
   }
 
-  // OBTENER RESULTADO INMEDIATAMENTE (no esperar la animación)
-  let serverData = null;
-  const fetchPromise = fetch(`${API_URL}/spin`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ bet })
-  })
-    .then(res => res.json())
-    .then(data => {
-      serverData = data;
-    })
-    .catch(error => {
-      console.error("Error al conectar con el servidor:", error);
-      setStatus("⚠️ Error de conexión");
-      balance += bet;
-      updateBalance();
-    });
-
   // Agregar clase spinning para activar animación de blur
   reels.forEach(reel => reel.classList.add("spinning"));
 
-  // Iniciar animación de giro con efecto más fluido
+  // Array para almacenar los resultados de cada rodillo
+  const finalGrid = [[], [], []];
+
+  // Iniciar animación de giro - CADA RODILLO OBTIENE SU RESULTADO INDEPENDIENTEMENTE
   const spinPromises = reels.map((reel, reelIndex) => {
-    return new Promise(resolve => {
+    return new Promise(async (resolve) => {
       const symbols = reel.querySelectorAll('.symbol');
       let spinCount = 0;
       const maxSpins = 20 + (reelIndex * 10);
 
-      const animationInterval = setInterval(() => {
+      const animationInterval = setInterval(async () => {
         symbols.forEach(s => {
           s.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
         });
@@ -183,40 +168,62 @@ async function spinOnce() {
 
         if (spinCount >= maxSpins) {
           clearInterval(animationInterval);
-          reel.classList.remove("spinning");
 
-          // Sonido de detención del rodillo
-          if (typeof soundManager !== 'undefined') {
-            soundManager.playReelStopSound();
+          // Obtener resultado para ESTE rodillo específico del servidor
+          try {
+            const response = await fetch(`${API_URL}/reel`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ reel_index: reelIndex })
+            });
+            const data = await response.json();
+
+            // Guardar resultado en el grid
+            finalGrid[reelIndex] = data.symbols;
+
+            // Mostrar el resultado final de ESTE rodillo
+            symbols.forEach((s, symbolIndex) => {
+              s.textContent = data.symbols[symbolIndex];
+            });
+
+            reel.classList.remove("spinning");
+
+            // Sonido de detención del rodillo
+            if (typeof soundManager !== 'undefined') {
+              soundManager.playReelStopSound();
+            }
+
+            resolve();
+          } catch (error) {
+            console.error("Error al obtener rodillo:", error);
+            // En caso de error, usar símbolos aleatorios
+            const fallbackSymbols = [
+              SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
+              SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)],
+              SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]
+            ];
+            finalGrid[reelIndex] = fallbackSymbols;
+            symbols.forEach((s, symbolIndex) => {
+              s.textContent = fallbackSymbols[symbolIndex];
+            });
+            reel.classList.remove("spinning");
+            resolve();
           }
-
-          resolve();
         }
       }, 80);
     });
   });
 
-  // Esperar a que TANTO la animación COMO el fetch terminen
-  await Promise.all([...spinPromises, fetchPromise]);
+  // Esperar a que todos los rodillos terminen
+  await Promise.all(spinPromises);
 
-  // Si no hay datos del servidor (error), terminar
-  if (!serverData) {
-    spinning = false;
-    return;
-  }
-
-  // Mostrar resultado final (ahora los símbolos no cambiarán)
-  reels.forEach((reel, reelIndex) => {
-    const symbols = reel.querySelectorAll('.symbol');
-    symbols.forEach((s, symbolIndex) => {
-      s.textContent = serverData.grid[symbolIndex][reelIndex];
-    });
-  });
+  // Calcular ganancia en el frontend
+  const win = calculateWin(finalGrid, bet);
 
   // Efecto de victoria o pérdida
-  if (serverData.win > 0) {
-    balance += serverData.win;
-    const winAmount = serverData.win;
+  if (win > 0) {
+    balance += win;
+    const winAmount = win;
     const isBigWin = winAmount >= bet * 5;
 
     if (isBigWin) {
@@ -263,7 +270,7 @@ async function spinOnce() {
       createFlash();
     }
 
-    highlightWinningLines(serverData.grid);
+    highlightWinningLines(finalGrid);
 
   } else {
     // PÉRDIDA
@@ -302,6 +309,46 @@ async function spinOnce() {
     autoBtn.querySelector('.auto-status').textContent = "OFF";
     setStatus("💸 Sin saldo para auto-spin");
   }
+}
+
+// Calcular ganancia basado en el grid
+function calculateWin(grid, bet) {
+  const PAYTABLE = {
+    "🍒": 5,
+    "🍋": 4,
+    "🍇": 6,
+    "🔔": 8,
+    "⭐": 10,
+    "7️⃣": 20
+  };
+
+  let total = 0;
+
+  // Convertir grid de [col][row] a [row][col] para facilitar cálculo
+  const rows = [
+    [grid[0][0], grid[1][0], grid[2][0]],
+    [grid[0][1], grid[1][1], grid[2][1]],
+    [grid[0][2], grid[1][2], grid[2][2]]
+  ];
+
+  // Líneas horizontales
+  for (let row of rows) {
+    if (row[0] === row[1] && row[1] === row[2] && PAYTABLE[row[0]]) {
+      total += bet * PAYTABLE[row[0]];
+    }
+  }
+
+  // Diagonal principal
+  if (rows[0][0] === rows[1][1] && rows[1][1] === rows[2][2] && PAYTABLE[rows[0][0]]) {
+    total += bet * PAYTABLE[rows[0][0]];
+  }
+
+  // Diagonal inversa
+  if (rows[0][2] === rows[1][1] && rows[1][1] === rows[2][0] && PAYTABLE[rows[0][2]]) {
+    total += bet * PAYTABLE[rows[0][2]];
+  }
+
+  return total;
 }
 
 // Resaltar líneas ganadoras

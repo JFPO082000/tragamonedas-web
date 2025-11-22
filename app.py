@@ -71,6 +71,15 @@ def spin(req: SpinRequest):
     win = calc_payout(grid, bet)
     return SpinResponse(grid=grid, win=win)
 
+class ReelRequest(BaseModel):
+    reel_index: int
+
+@app.post("/reel")
+def get_reel(req: ReelRequest):
+    """Obtener símbolos para un rodillo individual"""
+    reel_symbols = [random.choice(SYMBOLS) for _ in range(3)]
+    return {"symbols": reel_symbols}
+
 
 if __name__ == "__main__":
     import uvicorn
