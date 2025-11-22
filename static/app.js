@@ -214,7 +214,7 @@ async function spinOnce() {
     });
   });
 
-  // Esperar a que todos los rodillos terminen
+  // Esperar a que todos los rodillos terminen1
   await Promise.all(spinPromises);
 
   // Calcular ganancia en el frontend
