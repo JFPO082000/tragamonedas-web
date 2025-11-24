@@ -13,6 +13,17 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* Seguridad: Prevenir selección de texto */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  /* Prevenir arrastrar elementos */
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
 }
 
 body {
@@ -29,6 +40,8 @@ body {
   align-items: center;
   justify-content: center;
   overflow-x: hidden;
+  /* Seguridad adicional para el body */
+  touch-action: pan-x pan-y;
 }
 
 .app {

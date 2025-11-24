@@ -67,75 +67,188 @@
         </div>
       </div>
 
-
-
     </div>
   </div>
 
   <script>
-    // Protección contra selección y clic derecho
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('selectstart', e => e.preventDefault());
-    document.addEventListener('copy', e => e.preventDefault());
+    // ==================== MEDIDAS DE SEGURIDAD ====================
 
-    // Deshabilitar teclas de inspección y zoom
+    // Protección contra clic derecho y menú contextual
+    document.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Prevenir selección de texto
+    document.addEventListener('selectstart', e => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Prevenir copiar
+    document.addEventListener('copy', e => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Prevenir cortar
+    document.addEventListener('cut', e => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Prevenir pegar (por seguridad adicional)
+    document.addEventListener('paste', e => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Prevenir arrastrar elementos
+    document.addEventListener('dragstart', e => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Deshabilitar teclas de inspección, zoom y herramientas de desarrollo
     document.addEventListener('keydown', e => {
-      // F12
-      if (e.key === 'F12') {
+      // F12 - Herramientas de desarrollo
+      if (e.key === 'F12' || e.keyCode === 123) {
         e.preventDefault();
         return false;
       }
 
-      // Ctrl+Shift+I / Cmd+Option+I (Inspeccionar)
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
+      // Ctrl+Shift+I / Cmd+Option+I (Inspeccionar elemento)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
         e.preventDefault();
         return false;
       }
 
-      // Ctrl+Shift+J / Cmd+Option+J (Consola)
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'J') {
+      // Ctrl+Shift+J / Cmd+Option+J (Consola de JavaScript)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
         e.preventDefault();
         return false;
       }
 
       // Ctrl+Shift+C / Cmd+Option+C (Selector de elementos)
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
         e.preventDefault();
         return false;
       }
 
-      // Ctrl+U / Cmd+U (Ver código fuente)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+      // Ctrl+Shift+K / Cmd+Option+K (Consola en Firefox)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'K' || e.key === 'k')) {
         e.preventDefault();
         return false;
       }
 
-      // Ctrl+Plus / Ctrl+Minus (Zoom in/out)
-      if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '_')) {
+      // Ctrl+U / Cmd+U (Ver código fuente de la página)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
         e.preventDefault();
         return false;
       }
 
-      // Ctrl+0 (Reset zoom)
-      if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+      // Ctrl+S / Cmd+S (Guardar página)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         return false;
+      }
+
+      // Ctrl+P / Cmd+P (Imprimir)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        return false;
+      }
+
+      // Prevenir zoom con teclado: Ctrl/Cmd + Plus/Minus/0
+      if (e.ctrlKey || e.metaKey) {
+        // Ctrl+Plus, Ctrl+=
+        if (e.key === '+' || e.key === '=' || e.keyCode === 187 || e.keyCode === 107) {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+Minus, Ctrl+_
+        if (e.key === '-' || e.key === '_' || e.keyCode === 189 || e.keyCode === 109) {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+0 (Reset zoom)
+        if (e.key === '0' || e.keyCode === 48 || e.keyCode === 96) {
+          e.preventDefault();
+          return false;
+        }
       }
     });
 
-    // Prevenir zoom con rueda del mouse + Ctrl
+    // Prevenir zoom con rueda del mouse + Ctrl/Cmd
     document.addEventListener('wheel', e => {
-      if (e.ctrlKey) {
+      if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
+        e.stopPropagation();
+        return false;
       }
     }, { passive: false });
 
-    // Prevenir zoom táctil (pinch)
+    // Prevenir zoom táctil (pinch to zoom en móviles/tablets)
+    let lastTouchDistance = 0;
+    document.addEventListener('touchstart', e => {
+      if (e.touches.length > 1) {
+        lastTouchDistance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+      }
+    }, { passive: false });
+
     document.addEventListener('touchmove', e => {
       if (e.touches.length > 1) {
         e.preventDefault();
+        e.stopPropagation();
+        return false;
       }
     }, { passive: false });
+
+    // Prevenir gestos táctiles de zoom
+    document.addEventListener('gesturestart', e => {
+      e.preventDefault();
+      return false;
+    });
+
+    document.addEventListener('gesturechange', e => {
+      e.preventDefault();
+      return false;
+    });
+
+    document.addEventListener('gestureend', e => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Detectar si las herramientas de desarrollo están abiertas (método adicional)
+    const devtoolsDetector = () => {
+      const threshold = 160;
+      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+      const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+
+      if (widthThreshold || heightThreshold) {
+        // Las DevTools podrían estar abiertas
+        document.body.innerHTML = '';
+      }
+    };
+
+    // Ejecutar detector periódicamente (opcional - puede ser agresivo)
+    // setInterval(devtoolsDetector, 1000);
+
+    // Prevenir debug con debugger
+    setInterval(() => {
+      // Este código hace más difícil usar debugger
+      (function () {
+        return false;
+      }['constructor']('debugger')());
+    }, 50);
+
+    // Mensaje de advertencia en consola
+    console.log('%c⚠️ ADVERTENCIA DE SEGURIDAD', 'color: red; font-size: 30px; font-weight: bold;');
+    console.log('%cEsta es una zona restringida. El acceso no autorizado está prohibido.', 'color: orange; font-size: 16px;');
   </script>
   <script src="/static/sounds.js"></script>
   <script src="/static/app.js"></script>
