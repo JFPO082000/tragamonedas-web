@@ -14,7 +14,7 @@ function getToken() {
 function logout() {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  window.location.href = '/static/login.html';
+  // No redirigir a login para permitir acceso desde App Inventor
 }
 
 const gridEl = document.getElementById("grid");
@@ -57,6 +57,8 @@ function setStatus(text) {
 }
 
 // CARGAR SALDO DESDE LA API AL INICIAR
+// NOTA: Esta función está deshabilitada. Ahora db-integration.js maneja la carga de saldo
+/*
 async function loadBalance() {
   console.log('🔄 Cargando saldo desde la API...');
   try {
@@ -98,6 +100,7 @@ async function loadBalance() {
     setStatus('❌ Error al cargar saldo');
   }
 }
+*/
 
 // Animación de la palanca
 function pullLever() {
@@ -445,6 +448,6 @@ autoBtn.onclick = () => {
 };
 
 // Inicializar
-loadBalance();
+// loadBalance();  // Deshabilitado - ahora lo hace db-integration.js
 updateBalance();
 setStatus("¡Buena suerte!");
