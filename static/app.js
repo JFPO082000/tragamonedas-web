@@ -58,15 +58,23 @@ function setStatus(text) {
 
 // CARGAR SALDO DESDE LA API AL INICIAR
 async function loadBalance() {
+  console.log('🔄 Cargando saldo desde la API...');
   try {
+    const token = getToken();
+    console.log('Token encontrado:', token ? 'Sí' : 'No');
+
     const response = await fetch(`${API_URL}/api/saldo`, {
       headers: {
-        'Authorization': `Bearer ${getToken()}`
-      }
+        'Authorization': `Bearer ${token}`
+      },
+      credentials: 'include'  // Importante para cookies
     });
+
+    console.log('Respuesta API saldo status:', response.status);
 
     if (response.ok) {
       const data = await response.json();
+      console.log('Datos recibidos:', data);
       balance = data.saldo;
       updateBalance();
 
@@ -76,12 +84,17 @@ async function loadBalance() {
       if (userNameEl && user.nombre) {
         userNameEl.textContent = `${user.nombre} ${user.apellido}`;
       }
+
+      console.log('✅ Saldo cargado correctamente:', balance);
     } else if (response.status === 401) {
+      console.warn('⚠️ Token inválido o expirado, redirigiendo a login...');
       // Token inválido, redirigir a login
       logout();
+    } else {
+      console.error('❌ Error al cargar saldo, status:', response.status);
     }
   } catch (error) {
-    console.error('Error al cargar saldo:', error);
+    console.error('❌ Error al cargar saldo:', error);
     setStatus('❌ Error al cargar saldo');
   }
 }
