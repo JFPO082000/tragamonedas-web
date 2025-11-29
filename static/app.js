@@ -1,9 +1,21 @@
 // Usar el origen actual del navegador (funciona local y en producción)
 const API_URL = window.location.origin;
 
-let balance = 500;
+let balance = 0;  // Se cargará desde la API
 let autoSpin = false;
 let spinning = false;
+
+// FUNCIÓN HELPER PARA OBTENER TOKEN
+function getToken() {
+  return localStorage.getItem('token');
+}
+
+// FUNCIÓN PARA CERRAR SESIÓN
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = '/static/login.html';
+}
 
 const gridEl = document.getElementById("grid");
 const statusEl = document.getElementById("status");
@@ -37,11 +49,41 @@ for (let i = 0; i < 3; i++) {
 }
 
 function updateBalance() {
-  balanceEl.textContent = "$" + balance;
+  balanceEl.textContent = "$" + balance.toFixed(2);
 }
 
 function setStatus(text) {
   statusEl.textContent = text;
+}
+
+// CARGAR SALDO DESDE LA API AL INICIAR
+async function loadBalance() {
+  try {
+    const response = await fetch(`${API_URL}/api/saldo`, {
+      headers: {
+        'Authorization': `Bearer ${getToken()}`
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      balance = data.saldo;
+      updateBalance();
+
+      // Mostrar nombre del usuario
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userNameEl = document.getElementById('userName');
+      if (userNameEl && user.nombre) {
+        userNameEl.textContent = `${user.nombre} ${user.apellido}`;
+      }
+    } else if (response.status === 401) {
+      // Token inválido, redirigir a login
+      logout();
+    }
+  } catch (error) {
+    console.error('Error al cargar saldo:', error);
+    setStatus('❌ Error al cargar saldo');
+  }
 }
 
 // Animación de la palanca
@@ -139,6 +181,9 @@ async function spinOnce() {
 
   spinning = true;
   setStatus("🎰 Girando...");
+
+  // Temporalmente descontar para mostrar animación
+  const balanceAnterior = balance;
   balance -= bet;
   updateBalance();
 
@@ -214,90 +259,125 @@ async function spinOnce() {
     });
   });
 
-  // Esperar a que todos los rodillos terminen1
+  // Esperar a que todos los rodillos terminen
   await Promise.all(spinPromises);
 
-  // Calcular ganancia en el frontend
-  const win = calculateWin(finalGrid, bet);
+  // Enviar spin al servidor con autenticación
+  try {
+    const spinResponse = await fetch(`${API_URL}/spin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({ bet: bet })
+    });
 
-  // Efecto de victoria o pérdida
-  if (win > 0) {
-    balance += win;
-    const winAmount = win;
-    const isBigWin = winAmount >= bet * 5;
+    if (!spinResponse.ok) {
+      if (spinResponse.status === 401) {
+        logout();
+        return;
+      }
+      const error = await spinResponse.json();
+      setStatus(`❌ ${error.detail || 'Error'}`);
+      // Restaurar balance anterior
+      balance = balanceAnterior;
+      updateBalance();
+      spinning = false;
+      return;
+    }
 
-    if (isBigWin) {
-      // GRAN VICTORIA
-      setStatus(`🎊 ¡GRAN VICTORIA! +$${winAmount} 🎊`);
+    const serverData = await spinResponse.json();
+    const win = serverData.win;
 
-      // Sonido de gran victoria
-      if (typeof soundManager !== 'undefined') {
-        soundManager.playBigWinSound();
-        setTimeout(() => soundManager.playCoinSound(), 400);
+    // ACTUALIZAR SALDO DESDE EL SERVIDOR
+    balance = serverData.nuevo_saldo;
+    updateBalance();
+
+    // Efecto de victoria o pérdida
+    if (win > 0) {
+      const winAmount = win;
+      const isBigWin = winAmount >= bet * 5;
+
+      if (isBigWin) {
+        // GRAN VICTORIA
+        setStatus(`🎊 ¡GRAN VICTORIA! +$${winAmount} 🎊`);
+
+        // Sonido de gran victoria
+        if (typeof soundManager !== 'undefined') {
+          soundManager.playBigWinSound();
+          setTimeout(() => soundManager.playCoinSound(), 400);
+        }
+
+        document.querySelector('.slot-machine').classList.add('machine-shake-win');
+        setTimeout(() => {
+          document.querySelector('.slot-machine').classList.remove('machine-shake-win');
+        }, 500);
+
+        createFlash();
+        createCelebrationOverlay();
+        createBigWinText(`¡$${winAmount}!`);
+        createConfetti(50);
+
+        document.querySelector('.lights').classList.add('victory-lights');
+        setTimeout(() => {
+          document.querySelector('.lights').classList.remove('victory-lights');
+        }, 3000);
+
+      } else {
+        // Victoria normal
+        setStatus(`🎉 ¡GANASTE $${winAmount}!`);
+
+        // Sonido de victoria normal
+        if (typeof soundManager !== 'undefined') {
+          soundManager.playWinSound();
+          setTimeout(() => soundManager.playCoinSound(), 200);
+        }
+
+        gridEl.parentElement.classList.add("win-effect");
+        setTimeout(() => {
+          gridEl.parentElement.classList.remove("win-effect");
+        }, 500);
+
+        createConfetti(20);
+        createFlash();
       }
 
-      document.querySelector('.slot-machine').classList.add('machine-shake-win');
-      setTimeout(() => {
-        document.querySelector('.slot-machine').classList.remove('machine-shake-win');
-      }, 500);
-
-      createFlash();
-      createCelebrationOverlay();
-      createBigWinText(`¡$${winAmount}!`);
-      createConfetti(50);
-
-      document.querySelector('.lights').classList.add('victory-lights');
-      setTimeout(() => {
-        document.querySelector('.lights').classList.remove('victory-lights');
-      }, 3000);
+      highlightWinningLines(finalGrid);
 
     } else {
-      // Victoria normal
-      setStatus(`🎉 ¡GANASTE $${winAmount}!`);
+      // PÉRDIDA
+      setStatus("Intenta de nuevo...");
 
-      // Sonido de victoria normal
+      // Sonido de pérdida
       if (typeof soundManager !== 'undefined') {
-        soundManager.playWinSound();
-        setTimeout(() => soundManager.playCoinSound(), 200);
+        soundManager.playLossSound();
       }
 
-      gridEl.parentElement.classList.add("win-effect");
+      createLossOverlay();
+
+      document.querySelector('.slot-machine').classList.add('machine-shake-loss');
       setTimeout(() => {
-        gridEl.parentElement.classList.remove("win-effect");
-      }, 500);
+        document.querySelector('.slot-machine').classList.remove('machine-shake-loss');
+      }, 400);
 
-      createConfetti(20);
-      createFlash();
+      const symbols = document.querySelectorAll('.symbol');
+      symbols.forEach(s => s.classList.add('symbol-dimmed'));
+      setTimeout(() => {
+        symbols.forEach(s => s.classList.remove('symbol-dimmed'));
+      }, 800);
+
+      createLossText();
     }
 
-    highlightWinningLines(finalGrid);
-
-  } else {
-    // PÉRDIDA
-    setStatus("Intenta de nuevo...");
-
-    // Sonido de pérdida
-    if (typeof soundManager !== 'undefined') {
-      soundManager.playLossSound();
-    }
-
-    createLossOverlay();
-
-    document.querySelector('.slot-machine').classList.add('machine-shake-loss');
-    setTimeout(() => {
-      document.querySelector('.slot-machine').classList.remove('machine-shake-loss');
-    }, 400);
-
-    const symbols = document.querySelectorAll('.symbol');
-    symbols.forEach(s => s.classList.add('symbol-dimmed'));
-    setTimeout(() => {
-      symbols.forEach(s => s.classList.remove('symbol-dimmed'));
-    }, 800);
-
-    createLossText();
+  } catch (error) {
+    console.error('Error en spin:', error);
+    setStatus('❌ Error de conexión');
+    // Restaurar balance anterior
+    balance = balanceAnterior;
+    updateBalance();
   }
 
-  updateBalance();
   spinning = false;
 
   if (autoSpin && balance >= bet) {
@@ -309,46 +389,6 @@ async function spinOnce() {
     autoBtn.querySelector('.auto-status').textContent = "OFF";
     setStatus("💸 Sin saldo para auto-spin");
   }
-}
-
-// Calcular ganancia basado en el grid
-function calculateWin(grid, bet) {
-  const PAYTABLE = {
-    "🍒": 5,
-    "🍋": 4,
-    "🍇": 6,
-    "🔔": 8,
-    "⭐": 10,
-    "7️⃣": 20
-  };
-
-  let total = 0;
-
-  // Convertir grid de [col][row] a [row][col] para facilitar cálculo
-  const rows = [
-    [grid[0][0], grid[1][0], grid[2][0]],
-    [grid[0][1], grid[1][1], grid[2][1]],
-    [grid[0][2], grid[1][2], grid[2][2]]
-  ];
-
-  // Líneas horizontales
-  for (let row of rows) {
-    if (row[0] === row[1] && row[1] === row[2] && PAYTABLE[row[0]]) {
-      total += bet * PAYTABLE[row[0]];
-    }
-  }
-
-  // Diagonal principal
-  if (rows[0][0] === rows[1][1] && rows[1][1] === rows[2][2] && PAYTABLE[rows[0][0]]) {
-    total += bet * PAYTABLE[rows[0][0]];
-  }
-
-  // Diagonal inversa
-  if (rows[0][2] === rows[1][1] && rows[1][1] === rows[2][0] && PAYTABLE[rows[0][2]]) {
-    total += bet * PAYTABLE[rows[0][2]];
-  }
-
-  return total;
 }
 
 // Resaltar líneas ganadoras
@@ -392,5 +432,6 @@ autoBtn.onclick = () => {
 };
 
 // Inicializar
+loadBalance();
 updateBalance();
 setStatus("¡Buena suerte!");
