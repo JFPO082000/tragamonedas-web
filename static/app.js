@@ -283,9 +283,9 @@ async function spinOnce() {
     const spinResponse = await fetch(`${API_URL}/spin`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getToken()}`
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',  // Usar cookies para autenticación
       body: JSON.stringify({ bet: bet })
     });
 
