@@ -26,34 +26,9 @@ async function loadBalanceFromDB() {
     }
 }
 
-// Sobrescribir función calculateWin para actualizar BD
-const originalCalculateWin = window.calculateWin;
-window.calculateWin = async function (grid, bet) {
-    // Calcular ganancia localmente primero
-    const win = originalCalculateWin(grid, bet);
-
-    // Enviar al servidor para actualizar BD
-    try {
-        const response = await fetch(`${API_URL_DB}/spin`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ bet: bet })
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            // Actualizar saldo desde el servidor
-            balance = data.nuevo_saldo;
-            return data.win;
-        }
-    } catch (error) {
-        console.error('Error al actualizar BD:', error);
-    }
-
-    // Si falla, usar cálculo local
-    return win;
-};
+// NOTA: La lógica de actualización de saldo está en app.js > spinOnce()
+// que ya llama al endpoint /spin y actualiza correctamente el balance
+// tanto para victorias como para pérdidas.
 
 // Cargar saldo al iniciar
 loadBalanceFromDB();
