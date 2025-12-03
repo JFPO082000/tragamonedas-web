@@ -122,40 +122,59 @@ def get_saldo(current_user: Usuario = Depends(get_current_user), db: Session = D
 # ========== ENDPOINTS DEL JUEGO ==========
 
 @app.get("/")
-def serve_frontend(request: Request, response: Response, user_email: str = None, db: Session = Depends(get_db)):
+def serve_lobby(request: Request, response: Response, user_email: str = None, db: Session = Depends(get_db)):
     """
     Ruta raíz inteligente:
-    Si recibe ?user_email=..., busca al usuario, crea un token y lo guarda en cookie.
-    Permite login automático desde App Inventor.
+    - Si recibe ?user_email=... (App Inventor): Auto-login y REDIRECT a /game/slots.
+    - Si NO recibe user_email (Web): Sirve lobby.html.
     """
-    # Preparamos la respuesta (el archivo HTML)
-    file_response = FileResponse("static/index.html")
-
-    # Si App Inventor nos mandó el email...
+    # 1. Lógica de App Inventor (Auto-login + Redirect)
     if user_email:
         print(f"🔌 Conexión desde App Inventor para: {user_email}")
         
-        # 1. Buscar usuario en la BD
+        # Buscar usuario en la BD
         user = db.query(Usuario).filter(Usuario.email == user_email).first()
         
         if user:
-            # 2. Crear Token automáticamente (Login sin contraseña)
-            # Esto es seguro porque confiamos en que tu App Inventor ya validó la contraseña antes
+            # Crear Token
             token = create_access_token({
                 "sub": str(user.id_usuario),
                 "email": user.email
             })
             
-            # 3. Inyectar Token en la Cookie del navegador
-            file_response.set_cookie(
+            # Redirigir DIRECTAMENTE al juego de slots
+            # Usamos RedirectResponse pero necesitamos setear la cookie también
+            from fastapi.responses import RedirectResponse
+            redirect_response = RedirectResponse(url="/game/slots", status_code=302)
+            
+            # Inyectar Token en la Cookie
+            redirect_response.set_cookie(
                 key="access_token",
                 value=token,
-                httponly=True,  # Más seguridad
+                httponly=True,
                 samesite="lax"
             )
-            print(f"✅ Token creado y enviado en cookie para {user_email}")
-    
-    return file_response
+            print(f"✅ Token creado y redirigiendo a Slots para {user_email}")
+            return redirect_response
+            
+    # 2. Lógica Web Normal (Lobby)
+    return FileResponse("static/lobby.html")
+
+@app.get("/game/slots")
+def serve_slots():
+    """Sirve el juego de Tragamonedas (antiguo index.html)"""
+    return FileResponse("static/slots.html")
+
+@app.get("/game/blackjack")
+def serve_blackjack():
+    """Placeholder para Blackjack"""
+    # Si tienes el archivo, cámbialo aquí. Por ahora redirige al lobby o muestra un mensaje.
+    return Response(content="<h1>Próximamente: Blackjack</h1><a href='/'>Volver al Lobby</a>", media_type="text/html")
+
+@app.get("/game/roulette")
+def serve_roulette():
+    """Placeholder para Ruleta"""
+    return Response(content="<h1>Próximamente: Ruleta</h1><a href='/'>Volver al Lobby</a>", media_type="text/html")
 
 def generate_grid():
     return [[random.choice(SYMBOLS) for _ in range(3)] for _ in range(3)]

@@ -1,21 +1,9 @@
-// Usar el origen actual del navegador (funciona local y en producción)
-const API_URL = window.location.origin;
+// Auth logic moved to auth_shared.js
+// API_URL, getToken, and logout are now provided by auth_shared.js
 
 let balance = 0;  // Se cargará desde la API
 let autoSpin = false;
 let spinning = false;
-
-// FUNCIÓN HELPER PARA OBTENER TOKEN
-function getToken() {
-  return localStorage.getItem('token');
-}
-
-// FUNCIÓN PARA CERRAR SESIÓN
-function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  // No redirigir a login para permitir acceso desde App Inventor
-}
 
 const gridEl = document.getElementById("grid");
 const statusEl = document.getElementById("status");
