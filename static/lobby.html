@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,7 +37,7 @@
             background: linear-gradient(45deg, #FFD700, #FFA500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .games-grid {
@@ -107,6 +108,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="user-info">
         <span id="userName">Usuario</span>
@@ -140,11 +142,19 @@
 
     <script src="/static/auth_shared.js"></script>
     <script>
-        // Mostrar nombre de usuario
+        // Mostrar nombre de usuario o Invitado
         const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const userNameElement = document.getElementById('userName');
+        const logoutBtn = document.querySelector('.btn-logout');
+
         if (user.nombre) {
-            document.getElementById('userName').textContent = `${user.nombre} ${user.apellido}`;
+            userNameElement.textContent = `${user.nombre} ${user.apellido}`;
+            logoutBtn.style.display = 'block';
+        } else {
+            userNameElement.textContent = "Invitado (Saldo: $0)";
+            logoutBtn.style.display = 'none'; // O cambiar a "Iniciar Sesión"
         }
     </script>
 </body>
+
 </html>
