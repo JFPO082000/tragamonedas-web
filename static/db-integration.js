@@ -37,15 +37,19 @@ loadBalanceFromDB();
 // 1. Obtener el ID del usuario de la URL
 const urlParams = new URLSearchParams(window.location.search);
 const userId = urlParams.get('user_id');
+const backendUrl = urlParams.get('api_url') || ""; // URL base opcional
 
 if (userId) {
-    // 2. Pedir el saldo al backend de Royal Crumbs
-    fetch(`/api/user/${userId}`)
+    // Si hay backend URL específica, úsala
+    const fetchUrl = backendUrl
+        ? `${backendUrl}/api/user/${userId}`
+        : `/api/user/${userId}`;
+
+    fetch(fetchUrl)
         .then(response => response.json())
         .then(data => {
             if (data.saldo !== undefined) {
-                console.log("Saldo del usuario (URL):", data.saldo);
-
+                console.log("Saldo detectado (URL):", data.saldo);
                 // Actualiza la variable de saldo del juego y la UI
                 balance = data.saldo;
                 updateBalance();
