@@ -32,3 +32,27 @@ async function loadBalanceFromDB() {
 
 // Cargar saldo al iniciar
 loadBalanceFromDB();
+
+// === NUEVO: Integración por ID de usuario en URL ===
+// 1. Obtener el ID del usuario de la URL
+const urlParams = new URLSearchParams(window.location.search);
+const userId = urlParams.get('user_id');
+
+if (userId) {
+    // 2. Pedir el saldo al backend de Royal Crumbs
+    fetch(`/api/user/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.saldo !== undefined) {
+                console.log("Saldo del usuario (URL):", data.saldo);
+
+                // Actualiza la variable de saldo del juego y la UI
+                balance = data.saldo;
+                updateBalance();
+            }
+        })
+        .catch(error => console.error("Error obteniendo saldo por URL:", error));
+} else {
+    // No interfiere con la lógica de App Inventor si no hay user_id
+    console.log("No se detectó parameter 'user_id' en la URL, continuando con flujo normal.");
+}

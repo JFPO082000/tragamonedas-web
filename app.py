@@ -243,6 +243,15 @@ def get_reel(req: dict):
     reel_symbols = [random.choice(SYMBOLS) for _ in range(3)]
     return {"symbols": reel_symbols}
 
+
+@app.get("/api/user/{user_id}")
+def get_user_balance_by_id(user_id: int, db: Session = Depends(get_db)):
+    """Obtener saldo por ID de usuario (sin auth session, para integración simple)"""
+    saldo_obj = db.query(Saldo).filter(Saldo.id_usuario == user_id).first()
+    if not saldo_obj:
+        return {"saldo": 0.0}
+    return {"saldo": float(saldo_obj.saldo_actual)}
+
 # ========== STARTUP ==========
 
 @app.on_event("startup")
