@@ -34,28 +34,32 @@ async function loadBalanceFromDB() {
 loadBalanceFromDB();
 
 // === NUEVO: Integración por ID de usuario en URL ===
-// 1. Obtener el ID del usuario de la URL
 const urlParams = new URLSearchParams(window.location.search);
 const userId = urlParams.get('user_id');
-const backendUrl = urlParams.get('api_url') || ""; // URL base opcional
+const backendUrl = urlParams.get('api_url');
 
 if (userId) {
-    // Si hay backend URL específica, úsala
-    const fetchUrl = backendUrl
-        ? `${backendUrl}/api/user/${userId}`
-        : `/api/user/${userId}`;
+    let fetchUrl;
+    if (backendUrl) {
+        console.log("Conectando al backend:", backendUrl);
+        // Usamos la URL absoluta del backend que recibimos
+        fetchUrl = `${backendUrl}/api/user/${userId}`;
+    } else {
+        // Fallback: usar ruta relativa si no hay api_url
+        fetchUrl = `/api/user/${userId}`;
+    }
 
     fetch(fetchUrl)
         .then(response => response.json())
         .then(data => {
             if (data.saldo !== undefined) {
-                console.log("Saldo detectado (URL):", data.saldo);
+                console.log("Saldo recibido:", data.saldo);
                 // Actualiza la variable de saldo del juego y la UI
                 balance = data.saldo;
                 updateBalance();
             }
         })
-        .catch(error => console.error("Error obteniendo saldo por URL:", error));
+        .catch(err => console.error("Error conectando:", err));
 } else {
     // No interfiere con la lógica de App Inventor si no hay user_id
     console.log("No se detectó parameter 'user_id' en la URL, continuando con flujo normal.");
